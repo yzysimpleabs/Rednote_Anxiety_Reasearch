@@ -1,0 +1,4 @@
+﻿scenario,total_view,commercial_view,total_income,brand_spend,brand_roi_view_per_yuan,hi_anxiety_mult,commercial_mult
+neutral,24254015.0,6279456.0,1417413.0,1417413.0,4.430223230632144,1.0,1.0
+suppress_high_anxiety,21965628.6,5791929.2,1417413.0,1417413.0,4.086267869703467,0.8,1.0
+support_anxiety_commercial,25466245.37,7041471.470000001,1417413.0,1417413.0,4.967833277950746,1.05,1.1

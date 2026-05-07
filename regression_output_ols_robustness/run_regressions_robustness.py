@@ -38,6 +38,53 @@ def fmt(x, digits=6):
         return str(x)
 
 
+def baseline_category(series):
+    vals = pd.Series(series).dropna().astype(str).unique().tolist()
+    if not vals:
+        return None
+    return sorted(vals)[0]
+
+
+def describe_term(term, baselines):
+    if term == "const":
+        return "截距项（常数项）"
+    if term == "anxiety_score":
+        return "焦虑情绪评分（原始字段；数值越高表示越焦虑）"
+    if term == "anxiety_sq":
+        return "anxiety_score 的平方项（用于捕捉非线性）"
+    if term == "is_commercial":
+        return "是否商业合作笔记（1=商业，0=非商业）"
+    if term == "ln_view_plus1":
+        return "ln(view + 1)，view 为曝光/浏览量（原始字段）"
+    if term.startswith("high_or_low_"):
+        level = term[len("high_or_low_") :]
+        base = baselines.get("high_or_low")
+        base_txt = f"；基准组（被 drop_first 删除）={base}" if base is not None else ""
+        return f"达人分层 high_or_low 的哑变量：high_or_low=={level} 记为 1，否则为 0{base_txt}"
+    return "未识别变量：可能来自哑变量或输入数据字段"
+
+
+def write_model_structure(f, terms, y_col, y_desc, x_numeric_cols, x_categorical_cols, baselines, sample_note=None):
+    f.write("### 模型构成\n\n")
+    if sample_note:
+        f.write(f"- 样本：{sample_note}\n")
+    f.write(f"- 因变量（Y）：{y_col} — {y_desc}\n")
+    if x_categorical_cols:
+        cats = ", ".join(x_categorical_cols)
+        nums = ", ".join(x_numeric_cols)
+        f.write(f"- 自变量（X）：const, {nums}, {cats}（会展开为哑变量）\n\n")
+    else:
+        nums = ", ".join(x_numeric_cols)
+        f.write(f"- 自变量（X）：const, {nums}\n\n")
+
+    f.write("### 变量释义（参数/term 含义）\n\n")
+    f.write("| term | 含义 |\n")
+    f.write("|---|---|\n")
+    for t in terms:
+        f.write("| " + str(t) + " | " + describe_term(str(t), baselines) + " |\n")
+    f.write("\n")
+
+
 def winsorize_cols(df, cols, lower=0.01, upper=0.99):
     df = df.copy()
     for c in cols:
@@ -367,8 +414,42 @@ def main():
         f.write("![resid_m2](figs/residuals_model2.png)\n\n")
         f.write("![resid_m3](figs/residuals_model3.png)\n\n")
 
+        specs = {
+            "Model1_CollectLikeRatio": {
+                "y_col": "ratio_collect",
+                "y_desc": "收藏/点赞（collect/like；当 like<=0 时记为缺失）",
+                "x_numeric_cols": ["anxiety_score", "anxiety_sq", "is_commercial"],
+                "x_categorical_cols": [],
+            },
+            "Model2_lnCESper1000Plus1": {
+                "y_col": "ln_ces_per_1000_view_plus1",
+                "y_desc": "ln(CES_per_1000_view + 1)，其中 CES=like+collect+4*comments+4*share；CES_per_1000_view=CES/view*1000",
+                "x_numeric_cols": ["anxiety_score", "anxiety_sq", "is_commercial"],
+                "x_categorical_cols": ["high_or_low"],
+            },
+            "Model3_lnNoteQuotePlus1": {
+                "y_col": "ln_note_quote_plus1",
+                "y_desc": "ln(note_quote + 1)，note_quote 为报价（优先视频报价 quote_video，否则图文报价 quote_post）",
+                "x_numeric_cols": ["anxiety_score", "ln_view_plus1", "is_commercial"],
+                "x_categorical_cols": [],
+            },
+        }
+
+        baselines = {"high_or_low": baseline_category(df.get("high_or_low"))}
+
         for name in ["Model1_CollectLikeRatio", "Model2_lnCESper1000Plus1", "Model3_lnNoteQuotePlus1"]:
             f.write(f"## {name}\n\n")
+            spec = specs[name]
+            terms = models[name].copy().sort_values("term")["term"].tolist()
+            write_model_structure(
+                f,
+                terms,
+                y_col=spec["y_col"],
+                y_desc=spec["y_desc"],
+                x_numeric_cols=spec["x_numeric_cols"],
+                x_categorical_cols=spec["x_categorical_cols"],
+                baselines=baselines,
+            )
             meta = metas[name]
             f.write(f"- N = {meta['n']}, K = {meta['k']}, df_resid = {meta['df_resid']}, R2 = {fmt(meta['r2'], 6)}\n\n")
             f.write("| term | coef | se | t | p | 95% CI low | 95% CI high | |\n")
@@ -416,6 +497,16 @@ def main():
                 x_categorical_cols=[],
             )
             f.write("### Model1_CollectLikeRatio\n\n")
+            write_model_structure(
+                f,
+                r1g.sort_values("term")["term"].tolist(),
+                y_col="ratio_collect",
+                y_desc="收藏/点赞（collect/like；当 like<=0 时记为缺失）",
+                x_numeric_cols=["anxiety_score", "anxiety_sq", "is_commercial"],
+                x_categorical_cols=[],
+                baselines=baselines,
+                sample_note=f"high_or_low == {grp}",
+            )
             f.write(f"- N = {m1g['n']}, K = {m1g['k']}, clusters = {m1g['clusters']}, df_t = {m1g['df_t']}, R2 = {fmt(m1g['r2'], 6)}\n\n")
             f.write("| term | coef | se(cluster) | t | p | 95% CI low | 95% CI high | |\n")
             f.write("|---|---:|---:|---:|---:|---:|---:|:--:|\n")
@@ -449,6 +540,16 @@ def main():
                 x_categorical_cols=[],
             )
             f.write("### Model2_lnCESper1000Plus1\n\n")
+            write_model_structure(
+                f,
+                r2g.sort_values("term")["term"].tolist(),
+                y_col="ln_ces_per_1000_view_plus1",
+                y_desc="ln(CES_per_1000_view + 1)，其中 CES=like+collect+4*comments+4*share；CES_per_1000_view=CES/view*1000",
+                x_numeric_cols=["anxiety_score", "anxiety_sq", "is_commercial"],
+                x_categorical_cols=[],
+                baselines=baselines,
+                sample_note=f"high_or_low == {grp}",
+            )
             f.write(f"- N = {m2g['n']}, K = {m2g['k']}, clusters = {m2g['clusters']}, df_t = {m2g['df_t']}, R2 = {fmt(m2g['r2'], 6)}\n\n")
             f.write("| term | coef | se(cluster) | t | p | 95% CI low | 95% CI high | |\n")
             f.write("|---|---:|---:|---:|---:|---:|---:|:--:|\n")
@@ -482,6 +583,16 @@ def main():
                 x_categorical_cols=[],
             )
             f.write("### Model3_lnNoteQuotePlus1\n\n")
+            write_model_structure(
+                f,
+                r3g.sort_values("term")["term"].tolist(),
+                y_col="ln_note_quote_plus1",
+                y_desc="ln(note_quote + 1)，note_quote 为报价（优先视频报价 quote_video，否则图文报价 quote_post）",
+                x_numeric_cols=["anxiety_score", "ln_view_plus1", "is_commercial"],
+                x_categorical_cols=[],
+                baselines=baselines,
+                sample_note=f"high_or_low == {grp}",
+            )
             f.write(f"- N = {m3g['n']}, K = {m3g['k']}, clusters = {m3g['clusters']}, df_t = {m3g['df_t']}, R2 = {fmt(m3g['r2'], 6)}\n\n")
             f.write("| term | coef | se(cluster) | t | p | 95% CI low | 95% CI high | |\n")
             f.write("|---|---:|---:|---:|---:|---:|---:|:--:|\n")
@@ -513,4 +624,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

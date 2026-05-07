@@ -4,6 +4,21 @@
 
 ## Model1_CollectLikeRatio_low
 
+### 模型构成
+
+- 样本：high_or_low == low
+- 因变量（Y）：ratio_collect — 收藏/点赞（collect/like；当 like<=0 时记为缺失）
+- 自变量（X）：const, anxiety_score, anxiety_sq, is_commercial
+
+### 变量释义（参数/term 含义）
+
+| term | 含义 |
+|---|---|
+| anxiety_score | 焦虑情绪评分（原始字段；数值越高表示越焦虑） |
+| anxiety_sq | anxiety_score 的平方项（用于捕捉非线性） |
+| const | 截距项（常数项） |
+| is_commercial | 是否商业合作笔记（1=商业，0=非商业） |
+
 - N = 200, K = 4, clusters = 20, df_t = 19, R2 = 0.099153
 
 | term | coef | se(cluster) | t | p | 95% CI low | 95% CI high | |
@@ -14,6 +29,21 @@
 | is_commercial | 0.01539007 | 0.08940615 | 0.1721 | 0.865150 | -0.17173916 | 0.20251930 |  |
 
 ## Model2_lnCESper1000Plus1_low
+
+### 模型构成
+
+- 样本：high_or_low == low
+- 因变量（Y）：ln_ces_per_1000_view_plus1 — ln(CES_per_1000_view + 1)，其中 CES=like+collect+4*comments+4*share；CES_per_1000_view=CES/view*1000
+- 自变量（X）：const, anxiety_score, anxiety_sq, is_commercial
+
+### 变量释义（参数/term 含义）
+
+| term | 含义 |
+|---|---|
+| anxiety_score | 焦虑情绪评分（原始字段；数值越高表示越焦虑） |
+| anxiety_sq | anxiety_score 的平方项（用于捕捉非线性） |
+| const | 截距项（常数项） |
+| is_commercial | 是否商业合作笔记（1=商业，0=非商业） |
 
 - N = 200, K = 4, clusters = 20, df_t = 19, R2 = 0.044177
 
@@ -26,6 +56,21 @@
 
 ## Model3_lnNoteQuotePlus1_low
 
+### 模型构成
+
+- 样本：high_or_low == low
+- 因变量（Y）：ln_note_quote_plus1 — ln(note_quote + 1)，note_quote 为报价（优先视频报价 quote_video，否则图文报价 quote_post）
+- 自变量（X）：const, anxiety_score, ln_view_plus1, is_commercial
+
+### 变量释义（参数/term 含义）
+
+| term | 含义 |
+|---|---|
+| anxiety_score | 焦虑情绪评分（原始字段；数值越高表示越焦虑） |
+| const | 截距项（常数项） |
+| is_commercial | 是否商业合作笔记（1=商业，0=非商业） |
+| ln_view_plus1 | ln(view + 1)，view 为曝光/浏览量（原始字段） |
+
 - N = 200, K = 4, clusters = 20, df_t = 19, R2 = 0.014176
 
 | term | coef | se(cluster) | t | p | 95% CI low | 95% CI high | |
@@ -36,6 +81,21 @@
 | ln_view_plus1 | 0.02242685 | 0.05031389 | 0.4457 | 0.660824 | -0.08288133 | 0.12773503 |  |
 
 ## Model1_CollectLikeRatio_high
+
+### 模型构成
+
+- 样本：high_or_low == high
+- 因变量（Y）：ratio_collect — 收藏/点赞（collect/like；当 like<=0 时记为缺失）
+- 自变量（X）：const, anxiety_score, anxiety_sq, is_commercial
+
+### 变量释义（参数/term 含义）
+
+| term | 含义 |
+|---|---|
+| anxiety_score | 焦虑情绪评分（原始字段；数值越高表示越焦虑） |
+| anxiety_sq | anxiety_score 的平方项（用于捕捉非线性） |
+| const | 截距项（常数项） |
+| is_commercial | 是否商业合作笔记（1=商业，0=非商业） |
 
 - N = 200, K = 4, clusters = 20, df_t = 19, R2 = 0.018018
 
@@ -48,6 +108,21 @@
 
 ## Model2_lnCESper1000Plus1_high
 
+### 模型构成
+
+- 样本：high_or_low == high
+- 因变量（Y）：ln_ces_per_1000_view_plus1 — ln(CES_per_1000_view + 1)，其中 CES=like+collect+4*comments+4*share；CES_per_1000_view=CES/view*1000
+- 自变量（X）：const, anxiety_score, anxiety_sq, is_commercial
+
+### 变量释义（参数/term 含义）
+
+| term | 含义 |
+|---|---|
+| anxiety_score | 焦虑情绪评分（原始字段；数值越高表示越焦虑） |
+| anxiety_sq | anxiety_score 的平方项（用于捕捉非线性） |
+| const | 截距项（常数项） |
+| is_commercial | 是否商业合作笔记（1=商业，0=非商业） |
+
 - N = 200, K = 4, clusters = 20, df_t = 19, R2 = 0.006137
 
 | term | coef | se(cluster) | t | p | 95% CI low | 95% CI high | |
@@ -58,6 +133,21 @@
 | is_commercial | 0.06358892 | 0.12904354 | 0.4928 | 0.627821 | -0.20650232 | 0.33368015 |  |
 
 ## Model3_lnNoteQuotePlus1_high
+
+### 模型构成
+
+- 样本：high_or_low == high
+- 因变量（Y）：ln_note_quote_plus1 — ln(note_quote + 1)，note_quote 为报价（优先视频报价 quote_video，否则图文报价 quote_post）
+- 自变量（X）：const, anxiety_score, ln_view_plus1, is_commercial
+
+### 变量释义（参数/term 含义）
+
+| term | 含义 |
+|---|---|
+| anxiety_score | 焦虑情绪评分（原始字段；数值越高表示越焦虑） |
+| const | 截距项（常数项） |
+| is_commercial | 是否商业合作笔记（1=商业，0=非商业） |
+| ln_view_plus1 | ln(view + 1)，view 为曝光/浏览量（原始字段） |
 
 - N = 200, K = 4, clusters = 20, df_t = 19, R2 = 0.024263
 

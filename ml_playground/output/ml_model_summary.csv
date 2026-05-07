@@ -1,0 +1,7 @@
+﻿task,model,r2_test,n,features
+predict_view,RandomForest,0.8907798484573654,400,12
+predict_view,HistGradientBoosting,0.8790538316167422,400,12
+predict_ces_total,RandomForest,0.8759273942749586,400,10
+predict_ces_total,HistGradientBoosting,0.8378908903678137,400,10
+predict_video_cpe_calc,RandomForest,0.95604375630159,400,11
+predict_video_cpe_calc,HistGradientBoosting,0.9854264495869304,400,11
